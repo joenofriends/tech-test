@@ -1,0 +1,86 @@
+h1 { 
+    font-family: Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 40px;
+}
+
+p1{
+    font-size: 8px;
+    vertical-align: top;
+}
+
+
+form{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.formElements{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+.formElements2{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#container{
+    margin-top:10%;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width:650px;
+    border-style: solid;
+    border-width: 5px;
+    border-color: lightskyblue;
+    border-radius: 20px;
+    background-color: white;
+    padding-bottom: 20px;
+}
+#box{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 26px;
+    margin-right:26px;
+}
+#result{
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    margin-bottom: 10px;
+    display:none;
+}
+
+#bot{
+    margin-bottom: 0;
+}
+
+#headingContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width:100%;
+    padding-left: 5%;
+    padding-right: 5%;
+    border-bottom-style: solid;
+    border-color: lightgrey;
+    border-width: 1px;
+    margin: 10px;
+
+}
+
+.wrongable{
+    border-width: 1px;
+    border-style: solid;
+    border-color: white;
+    border-radius: 2px;
+
+}

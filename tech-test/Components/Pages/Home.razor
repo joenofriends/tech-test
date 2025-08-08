@@ -1,0 +1,255 @@
+﻿@page "/"
+@using System.Xml
+@inject ILogger<Home> Logger
+
+
+<PageTitle>Tech Test</PageTitle>
+<div>
+    <div id = "container">
+        <div id ="headingContainer">
+            <h1>Convert Numbers to Words</h1>
+        </div>
+        <div id = "box">
+            <p>Generates the spoken word version of any real number in dollars, from 10<p1 id="superscript">66</p1>-0.01 to -10<p1 id="superscript">66</p1>+0.01.</p>
+
+            <form method="post" @onsubmit="Submit" @formname="tech-test-form">
+                <AntiforgeryToken />
+                <div class = "formElements">
+                    <label class = "formElements">
+                        <div>Enter a number here:</div>
+                    </label>
+                </div>
+                <div class = "formElements2">
+                    <div class="wrongable" style = "border-color: @color">
+                        <InputText id="textBox" @bind-Value="num!.number" />
+                    </div>
+                    <button type="submit">Generate Words</button>
+                </div>
+            </form>
+            <div id ="result" style = "display: @showResult">
+                <p>Generated Words:</p>
+                <p id="bot">@generatedString</p> 
+            </div>
+        </div>
+            
+    </div>
+</div>
+
+
+
+@code {
+    [SupplyParameterFromForm]
+    private StringInput? num { get; set; }
+
+    public class StringInput
+        {
+            public string? number { get; set; }
+        }
+
+    private string generatedString = "";
+    
+    private string[] onesStrings = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE"];
+    private string[] tensStrings = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"];
+    private string[] teensStrings = ["TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"];
+    private string[] thousandStrings = ["", " THOUSAND", " MILLION", " BILLION", " TRILLION", " QUADRILLION", " QUINTILLION", " SEXTILLION", " SEPTILLION", " OCTILLION", " NONILLION", " DECILLION", " UNDECILLION",
+        " DUODECILLION", " TREDECILLION", " QUATTUORDECILLION", " QUINDECILLION", " SEXDECILLION", " SEPTENDECILLION", " OCTEDECILLION", " NOVEMDECILLION", " VIGINTILLION"];
+
+    //stores error codes for string generation
+    private int status = 1;
+    
+    //indicates what color the border on the input box should be, red if theres an error
+    private string color = "white";
+
+    //keeps the results hidden until the generate button has been pressed
+    private string showResult = "none";
+    protected override void OnInitialized() => num ??= new();
+
+    //handles the pressing of the generate string button by passing the input in the text box to the GenerateString function.
+    private void Submit() => generateString(num?.number);
+
+    //Cleans the input, verifies some aspects of the string, breaks it up around the decimal point and passes each side to the relevant string generation function, returning
+    //the combined results of both.
+    private string generateString(string ?inputString){
+        showResult = "block";
+        status = 1;
+        color = "white";
+        string numberString;
+        if (inputString is not null){
+            numberString = inputString;
+            if (numberString =="-"){
+                generatedString = "Not a number.";
+                return generatedString;
+            }
+            foreach(char digit in numberString){
+                if(digit =='0'){
+                    string temp = numberString[1..];
+                    numberString = temp;
+                }
+                else{
+                    break;
+                }
+            }
+            string[] sides = numberString.Split('.');
+            string integerString = "ZERO";
+            if(sides[0].Length > 0){
+                if(sides[0].Length > (sides[0][0] == '-' ?67:66)){
+                    generatedString = "That number is too large and I cannot find a name for it.";
+                    return generatedString;
+                }
+                integerString = integerStringToString(sides[0], "", 0);
+            }
+            if (integerString.Length == 0){
+                integerString = "ZERO";
+            }
+            integerString = integerString + " DOLLARS";
+
+            
+            string centString = "ZERO";
+            if(sides.Length > 1){
+
+                int cent = 0;
+                try{
+                    if(sides[1].Length > 2){
+                        cent = int.Parse(sides[1][..2]);
+                    }
+                    else{
+                        cent = int.Parse(sides[1]);
+                    }  
+                }catch{
+                    status = 0;
+                }
+                if(cent < 0){
+                    status = -2;
+                }
+                else{
+                    centString = tensToString(cent);
+                }
+
+            }
+            if(centString.Length == 0){
+                centString = "ZERO";
+            }
+            centString = centString + " CENTS";
+            if(status == 0 || status ==-2){
+                color = "red";
+                generatedString = "Not a number.";
+                return generatedString;
+            }
+
+            generatedString = (status==-1 ?"NEGATIVE ":"")+integerString + " AND " + centString;
+            return generatedString;
+        }
+        else{
+            generatedString = "";
+            return generatedString;
+        }
+
+        
+    }
+
+    //Converts the integer side of the number into a string by converting the last 3 digits of it into a string, removing them, and repeating for the new number
+    private string integerStringToString(string number, string oldString, int repeats){
+        string stringSlice = number;
+        if(number.Length > 3){
+            stringSlice = number[^3..];
+        }
+        
+        
+        bool thousands = number.Length > 3;
+        int slice=0;
+        try{
+            slice = int.Parse(stringSlice);
+        }catch{
+            status = 0;
+        }
+        if(status ==-1){
+            status = -2;
+            return "";
+        }
+        if(stringSlice == "-"){
+            status=-1;
+            return oldString;
+        }
+
+        if(slice < 0){
+            if(status ==-1||status ==-2){
+                status = -2;
+                return "";
+            }
+            else{
+                status = -1;
+                slice = slice *-1;
+            }
+        }
+
+        string tempString = sliceToString(slice, thousands && repeats==0); 
+        if (tempString.Length > 0){
+            tempString = tempString + thousandStrings[repeats];
+        }
+        if(oldString.Length > 0){
+            if(tempString.Length > 0){
+                if(oldString[..3].Equals("AND")){
+                    tempString = tempString +" "+ oldString;
+                }
+                else{
+                    tempString = tempString +", "+ oldString;
+                }
+            }
+            else{
+                tempString = oldString;
+            }  
+        }
+        if (thousands){
+            return integerStringToString(number[..^3], tempString, repeats+1);
+        }
+        return tempString;
+    }
+
+    //turns a 3 digit number or 'slice' from a larger number into a string of words
+    private string sliceToString(int number, bool thousand){
+    int hundreds = (int)Math.Floor(number/100.0);
+    string tensString = tensToString(number - hundreds*100);
+    string numberString = "";
+    if(onesStrings[hundreds].Length > 0){
+        numberString = onesStrings[hundreds] + " HUNDRED";
+    }
+    if(tensString.Length > 0){
+
+        if(numberString.Length > 0){
+            numberString = numberString + " AND " + tensString;
+
+        }
+            else{
+            if (thousand){
+                numberString = "AND " + tensString;
+
+            }
+            else{
+                numberString = tensString;
+            }
+        }
+    }
+    return numberString;
+    }
+    //turns a 2 digit number into a string of words
+    private string tensToString(int number){
+    int tens = (int)Math.Floor(number/10.0);
+    int ones = number - tens*10;
+    string numberString = "";
+    switch (tens){
+        case 0:
+        numberString = onesStrings[ones];
+        break;
+        case 1:
+        numberString = teensStrings[ones];
+        break;
+        default:
+        numberString = tensStrings[tens] + (ones > 0 ? "-" + onesStrings[ones]:"");
+        break;
+    }
+    return numberString;
+    }
+
+
+
+}
