@@ -93,6 +93,8 @@
             string integerString = "ZERO";
             if(sides[0].Length > 0){
                 if(sides[0].Length > (sides[0][0] == '-' ?67:66)){
+                    status = 2;
+                    color = "red";
                     generatedString = "That number is too large and I cannot find a name for it.";
                     return generatedString;
                 }
